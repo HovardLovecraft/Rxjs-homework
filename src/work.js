@@ -1,56 +1,54 @@
-import { interval, of, from, Observable } from "rxjs";
+import { interval, of, from, Observable, Subject, fromEvent } from "rxjs";
 import { ajax } from 'rxjs/ajax';
-import { filter, map, switchMap } from "rxjs/operators";
+import { filter, map, switchMap, take, tap } from "rxjs/operators";
 import { fromFetch } from 'rxjs/fetch';
-
 //import { IUsers, IAddress, ICompany, IGeo } from "./models";
 
-const rxjsBtn = document.getElementById('rxjs');
 const users = `https://jsonplaceholder.typicode.com/users`;
-const display = document.querySelector('#work .result')
+const rxjsBtn = document.getElementById('rxjs');
+const display = document.querySelector('#work .result');
+const filterInput = document.getElementById('user-filter');
+const stream$ = new Subject();
+const input$ = fromEvent(filterInput, 'input');
+const result = input$.pipe(switchMap( value => {
+    fetch(value);
+}));
 
 
-//const usersCounter = `${users}/${counter(1)}`;
-
-
-// const showUsers$ = new Observable(observer => {
-//     observer.next(users);
-    
-// })
-
-// showUsers$.subscribe(value => {
-//     fetch(value)
-//     .then(response => response.json())
-//     .then(json => console.log(json.map((obj) => obj.name)))
-// })
-
-ajax(users).pipe(
-    map(res => res))
-    .subscribe(res => {
-        for (let a of res.response) {
-            getUsers(a);
-        }
+const data$ = fromFetch(users).pipe(
+    switchMap(response => {
+        return response.json()
+        .then(json => json.map((obj) => obj.name))
+        
     })
+        
+)
 
-function getUsers(data) {
-    console.log(data.name);
-}
-
-// function publishUsers(data){
-//     data.
-// }
-
+data$.subscribe({
+    next: result => console.log(result),
+    complete: () => console.log('done')
+   })
 
 
+stream$.subscribe({
+    next: (value => {
+            fetch(value)
+            .then(response => response.json())
+            .then(json => json.map((obj) => obj.name))
+            .then(userNames => display.innerHTML = userNames)
+        }),
+
+});
 
 
 rxjsBtn.addEventListener('click', () => {
-    interval(1000)
-    ajax(users).pipe(
-        map(res => res))
-        .subscribe(res => {
-            for (let objects of res.response) {
-                display.innerHTML = objects.name;
-            }
-        })
+    stream$.next(users);
 })
+filterInput.addEventListener('input', () => {
+
+})
+
+
+
+
+
