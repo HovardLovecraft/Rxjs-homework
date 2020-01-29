@@ -1,6 +1,5 @@
 import { interval, of, from, Observable, Subject, fromEvent } from "rxjs";
-import { ajax } from 'rxjs/ajax';
-import { filter, map, switchMap, take, tap } from "rxjs/operators";
+import { filter, map, switchMap, take, tap, debounceTime, distinctUntilChanged } from "rxjs/operators";
 import { fromFetch } from 'rxjs/fetch';
 //import { IUsers, IAddress, ICompany, IGeo } from "./models";
 
@@ -9,46 +8,39 @@ const rxjsBtn = document.getElementById('rxjs');
 const display = document.querySelector('#work .result');
 const filterInput = document.getElementById('user-filter');
 const stream$ = new Subject();
-const input$ = fromEvent(filterInput, 'input');
-const result = input$.pipe(switchMap( value => {
-    fetch(value);
-}));
+const stream1$ = new Subject();
 
 
-const data$ = fromFetch(users).pipe(
-    switchMap(response => {
-        return response.json()
-        .then(json => json.map((obj) => obj.name))
-        
-    })
-        
-)
-
-data$.subscribe({
-    next: result => console.log(result),
-    complete: () => console.log('done')
-   })
+fromEvent(filterInput, 'keyup')
+    .pipe(
+        map((event) => (event.target).value),
+        filter(res => res.length >= 2),
+        debounceTime(1000),
+        distinctUntilChanged()
+    ).subscribe(res => stream1$.next(res));
 
 
 stream$.subscribe({
     next: (value => {
-            fetch(value)
-            .then(response => response.json())
-            .then(json => json.map((obj) => obj.name))
-            .then(userNames => display.innerHTML = userNames)
-        }),
-
+        fetch(value)
+        .then(response => response.json())
+        .then(json => json.map((obj) => obj.name))
+        .then(userNames => display.innerHTML = userNames)
+    })
 });
+
+stream1$.subscribe((value) => {
+        fetch(users)
+        .then(response => response.json())
+        .then(json => json.map((obj) => obj.name).filter(name => name.indexOf(value) > -1))
+        .then(userNames => display.innerHTML = userNames)
+    });
+
 
 
 rxjsBtn.addEventListener('click', () => {
     stream$.next(users);
 })
-filterInput.addEventListener('input', () => {
-
-})
-
-
 
 
 
