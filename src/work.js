@@ -10,6 +10,21 @@ const filterInput = document.getElementById('user-filter');
 const stream$ = new Subject();
 const stream1$ = new Subject();
 
+class User {
+
+    constructor(id, name, username, email, adress, phone, website, company, userURL ){
+        this.id = id;
+        this.name = name;
+        this.username = username;
+        this.email = email;
+        this.adress = adress;
+        this.phone = phone;
+        this.website = website;
+        this.company = company;
+        this.userURL = userURL;
+    }
+}
+
 
 fromEvent(filterInput, 'keyup')
     .pipe(
@@ -24,8 +39,10 @@ stream$.subscribe({
     next: (value => {
         fetch(value)
         .then(response => response.json())
-        .then(json => json.map((obj) => obj.name = new User))
+        .then(json => json.map((obj) => { return (obj = new User(obj.id, obj.name, obj.username, obj.email, obj.adress, obj.phone, obj.website, obj.company, obj.userURL))}))
+        .then(users => users.map((user) =>  user.name))
         .then(userNames => display.innerHTML = userNames)
+
     })
 });
 
@@ -43,4 +60,12 @@ rxjsBtn.addEventListener('click', () => {
 })
 
 
-
+// Old variant of getting users withour mapping models
+// stream$.subscribe({
+//     next: (value => {
+//         fetch(value)
+//         .then(response => response.json())
+//         .then(json => json.map((obj) => obj.name))
+//         .then(userNames => display.innerHTML = userNames)
+//     })
+// });
