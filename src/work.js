@@ -1,7 +1,7 @@
 import { interval, of, from, Observable, Subject, fromEvent } from "rxjs";
 import { filter, map, switchMap, take, tap, debounceTime, distinctUntilChanged } from "rxjs/operators";
 import { fromFetch } from 'rxjs/fetch';
-//import { IUsers, IAddress, ICompany, IGeo } from "./models";
+import "./models";
 
 const users = `https://jsonplaceholder.typicode.com/users`;
 const rxjsBtn = document.getElementById('rxjs');
@@ -24,7 +24,7 @@ stream$.subscribe({
     next: (value => {
         fetch(value)
         .then(response => response.json())
-        .then(json => json.map((obj) => obj.name))
+        .then(json => json.map((obj) => obj.name = new User))
         .then(userNames => display.innerHTML = userNames)
     })
 });
